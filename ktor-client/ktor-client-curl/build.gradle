@@ -1,0 +1,33 @@
+apply plugin: "kotlinx-serialization"
+apply plugin: 'de.undercouch.download'
+
+kotlin {
+    targets {
+        def current = []
+        if (project.ext.ideaActive) {
+            current = [posix]
+        } else {
+            current = [iosX64, iosArm64, macosX64, linuxX64, mingwX64]
+        }
+
+        configure(current) {
+            compilations.main.cinterops {
+                libcurl {
+                    defFile 'posix/interop/libcurl.def'
+                }
+            }
+        }
+    }
+
+    sourceSets {
+        posixMain.dependencies {
+            api project(':ktor-client:ktor-client-core')
+            api project(':ktor-http:ktor-http-cio')
+        }
+        posixTest.dependencies {
+            api project(':ktor-client:ktor-client-features:ktor-client-logging')
+            api project(':ktor-client:ktor-client-features:ktor-client-json')
+            api "org.jetbrains.kotlinx:kotlinx-serialization-runtime-native:$serialization_version"
+        }
+    }
+}
