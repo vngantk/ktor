@@ -1,5 +1,4 @@
 apply plugin: "kotlinx-serialization"
-apply plugin: 'de.undercouch.download'
 
 kotlin {
     targets {
@@ -10,10 +9,30 @@ kotlin {
             current = [iosX64, iosArm64, macosX64, linuxX64, mingwX64]
         }
 
-        configure(current) {
-            compilations.main.cinterops {
-                libcurl {
-                    defFile 'posix/interop/libcurl.def'
+        def paths = ["C:/msys64/mingw64/include", "C:/Tools/msys64/mingw64/include"]
+        configure(current) { platform ->
+            compilations.main {
+                cinterops {
+                    libcurl {
+                        defFile 'posix/interop/libcurl.def'
+                        if (platform.name == "mingwX64") {
+                            includeDirs.headerFilterOnly paths.findAll { it != null }
+                        }
+                    }
+                }
+            }
+
+            compilations.test {
+                if (platform.name == "mingwX64") {
+                    linkerOpts "-LC:/msys64/mingw64/lib -LC:/Tools/msys64/mingw64/lib -lcurl"
+                }
+            }
+
+            afterEvaluate {
+                if (platform.name == "mingwX64") {
+                    configure([mingwX64Test]) {
+                        environment "PATH": "C:\\msys64\\mingw64\\bin;C:\\Tools\\msys64\\mingw64\\bin "
+                    }
                 }
             }
         }
